@@ -11,7 +11,7 @@ st.title("📊 Amazon Sales Dashboard")
 # ---- Load Data from Excel ----
 df = pd.read_excel("Amazon_Sales_Cleaned.xlsx")
 
-# ---------------- Q1: Top Categories ----------------
+# ---------------- Top Categories ----------------
 st.header("Q1: What are the Top Categories with most products?")
 top_categories = df['category'].value_counts().reset_index()
 top_categories.columns = ['Category', 'Product Count']
@@ -24,18 +24,20 @@ fig1 = px.bar(top_categories.head(10),
 fig1.update_layout(width=900, height=500, xaxis_tickangle=45, margin=dict(l=50, r=50, t=50, b=50))
 st.plotly_chart(fig1, use_container_width=True)
 
-# ---------------- Q2: Actual vs Discount Price per Category ----------------
-st.header("Q2: Difference between Actual Price and Discounted Price per Category")
-df['price_diff'] = df['actual_price'] - df['discounted_price']
-price_diff = df.groupby("category")[["actual_price","discounted_price","price_diff"]].mean().reset_index()
+# ---------------- Distribution of Price Difference by Category ----------------
+st.header("Q2: Distribution of Price Difference by Category")
 
-fig2 = px.bar(price_diff, x="category", y=["actual_price","discounted_price"], 
-              barmode="group",
-              title="Actual vs Discounted Price (Avg) per Category")
-fig2.update_layout(width=900, height=500, xaxis_tickangle=45, margin=dict(l=50, r=50, t=50, b=50))
-st.plotly_chart(fig2, use_container_width=True)
+fig, ax = plt.subplots(figsize=(12,6))
+sns.boxplot(data=df, x='main_category', y='diff_of unit price', palette="Set2", ax=ax)
 
-# ---------------- Q4: Top 10 Most Reviewed Products ----------------
+ax.set_title("Distribution of Price Difference by Category")
+ax.set_xlabel("Category")
+ax.set_ylabel("Price Difference")
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
+
+st.pyplot(fig)
+
+# ---------------- Top 10 Most Reviewed Products ----------------
 st.header("Q4: Top 10 Most Reviewed Products with Category")
 df['rating_count'] = pd.to_numeric(df['rating_count'], errors="coerce").fillna(0).astype(int)
 top10_reviews = df.sort_values("rating_count", ascending=False).head(10)
@@ -45,7 +47,7 @@ fig3 = px.bar(top10_reviews, x="product_name", y="rating_count", color="category
 fig3.update_layout(width=900, height=500, xaxis_tickangle=45, margin=dict(l=50, r=50, t=50, b=50))
 st.plotly_chart(fig3, use_container_width=True)
 
-# ---------------- Q5: Top 5 Products with Highest Rating Counts ----------------
+# ---------------- Top 5 Products with Highest Rating Counts ----------------
 st.header("Q5: Top 5 Products with Highest Rating Counts")
 top5 = df.sort_values("rating_count", ascending=False).head(5)
 
@@ -53,3 +55,4 @@ fig4, ax = plt.subplots(figsize=(8,8))   # 👈 هنا تحكم في حجم ال
 ax.pie(top5["rating_count"], labels=top5["product_name"], autopct="%.1f%%", startangle=140)
 ax.set_title("Top 5 Products with Highest Rating Counts (Pie Chart)")
 st.pyplot(fig4)
+
