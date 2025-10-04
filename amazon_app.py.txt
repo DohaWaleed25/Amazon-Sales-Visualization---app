@@ -193,4 +193,5 @@ elif page == "ℹ️ About Data":
         font=dict(color="white")  
         )
         st.plotly_chart(fig4, use_container_width=True)
+
         st.info("📌 Discounted price doesn’t affect rating much — and neither do discount percentage or actual price.")
