@@ -24,25 +24,6 @@ fig1 = px.bar(top_categories.head(10),
 fig1.update_layout(width=900, height=500, xaxis_tickangle=45, margin=dict(l=50, r=50, t=50, b=50))
 st.plotly_chart(fig1, use_container_width=True)
 
-# ---------------- Distribution of Price Difference by Category ----------------
-# Show all columns to user
-st.write("Available columns:", df_clean.columns.tolist())
-
-# Dropdowns for selecting X and Y
-x_col = st.selectbox("اختر العمود للفئة (Category):", df_clean.columns.tolist(), index=0)
-y_col = st.selectbox("اختر العمود للقيم (Numeric):", df_clean.select_dtypes(include=["number"]).columns.tolist())
-
-if x_col and y_col:
-    fig, ax = plt.subplots(figsize=(12,6))
-    sns.boxplot(data=df, x=x_col, y=y_col, palette="Set2", ax=ax)
-
-    ax.set_title(f"Distribution of {y_col} by {x_col}")
-    ax.set_xlabel(x_col)
-    ax.set_ylabel(y_col)
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
-
-    st.pyplot(fig)
-
 # ---------------- Top 10 Most Reviewed Products ----------------
 st.header("Q4: Top 10 Most Reviewed Products with Category")
 df['rating_count'] = pd.to_numeric(df['rating_count'], errors="coerce").fillna(0).astype(int)
@@ -61,6 +42,7 @@ fig4, ax = plt.subplots(figsize=(8,8))   # 👈 هنا تحكم في حجم ال
 ax.pie(top5["rating_count"], labels=top5["product_name"], autopct="%.1f%%", startangle=140)
 ax.set_title("Top 5 Products with Highest Rating Counts (Pie Chart)")
 st.pyplot(fig4)
+
 
 
 
