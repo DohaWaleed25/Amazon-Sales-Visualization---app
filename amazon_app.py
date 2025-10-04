@@ -1,4 +1,3 @@
-# simple_streamlit_app.py
 import streamlit as st
 import pandas as pd
 import seaborn as sns
@@ -61,7 +60,8 @@ with tab4:
     if "rating_count" in df.columns:
         df["rating_count"] = pd.to_numeric(df["rating_count"], errors="coerce")
         top_products = df.nlargest(10, "rating_count")
-        fig = px.bar(top_products, x="product_name", y="rating_count", title="Top 10 Reviewed Products", color="rating_count")
+        fig = px.bar(top_products, x="product_name", y="rating_count", 
+                     title="Top 10 Reviewed Products", color="rating_count")
         st.plotly_chart(fig, use_container_width=True)
 
 # ---- Tab 5: Top Categories ----
@@ -70,7 +70,11 @@ with tab5:
     if {"discounted_price", "rating_count", "category"}.issubset(df.columns):
         df["rating_count"] = pd.to_numeric(df["rating_count"], errors="coerce").fillna(0)
         df["revenue"] = df["discounted_price"] * df["rating_count"]
-        top_cat = df.groupby("category")["revenue"].sum().reset_index().sort_values("revenue", ascending=False).head(10)
-        fig = px.bar(top_cat, x="category", y="revenue", title="Top 10 Categories by Revenue", color="revenue")
+        top_cat = (df.groupby("category")["revenue"]
+                     .sum()
+                     .reset_index()
+                     .sort_values("revenue", ascending=False)
+                     .head(10))
+        fig = px.bar(top_cat, x="category", y="revenue", 
+                     title="Top 10 Categories by Revenue", color="revenue")
         st.plotly_chart(fig, use_container_width=True)
-```
