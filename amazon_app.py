@@ -28,7 +28,7 @@ st.plotly_chart(fig1, use_container_width=True)
 st.header("Q2: Distribution of Price Difference by Category")
 
 fig, ax = plt.subplots(figsize=(12,6))
-sns.boxplot(data=df, x='main_category', y='diff_of unit price', palette="Set2", ax=ax)
+sns.boxplot(data=df_clean, x='main_category', y='diff_of unit price', palette="Set2", ax=ax)
 
 ax.set_title("Distribution of Price Difference by Category")
 ax.set_xlabel("Category")
@@ -55,4 +55,5 @@ fig4, ax = plt.subplots(figsize=(8,8))   # 👈 هنا تحكم في حجم ال
 ax.pie(top5["rating_count"], labels=top5["product_name"], autopct="%.1f%%", startangle=140)
 ax.set_title("Top 5 Products with Highest Rating Counts (Pie Chart)")
 st.pyplot(fig4)
+
 
