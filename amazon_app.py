@@ -25,17 +25,23 @@ fig1.update_layout(width=900, height=500, xaxis_tickangle=45, margin=dict(l=50, 
 st.plotly_chart(fig1, use_container_width=True)
 
 # ---------------- Distribution of Price Difference by Category ----------------
+# Q2: Distribution of Price Difference by Category (Boxplot)
 st.header("Q2: Distribution of Price Difference by Category")
 
-fig, ax = plt.subplots(figsize=(12,6))
-sns.boxplot(data=df_clean, x='main_category', y='diff_of unit price', palette="Set2", ax=ax)
+# نعرض الأعمدة كلها عشان تختاري
+numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+selected_col = st.selectbox("اختر العمود اللي عايزة تعملي عليه Boxplot:", numeric_cols)
 
-ax.set_title("Distribution of Price Difference by Category")
-ax.set_xlabel("Category")
-ax.set_ylabel("Price Difference")
-plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
+if selected_col:
+    fig, ax = plt.subplots(figsize=(12,6))
+    sns.boxplot(data=df, x='main_category', y=selected_col, palette="Set2", ax=ax)
 
-st.pyplot(fig)
+    ax.set_title(f"Distribution of {selected_col} by Category")
+    ax.set_xlabel("Category")
+    ax.set_ylabel(selected_col)
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
+
+    st.pyplot(fig)
 
 # ---------------- Top 10 Most Reviewed Products ----------------
 st.header("Q4: Top 10 Most Reviewed Products with Category")
@@ -55,6 +61,7 @@ fig4, ax = plt.subplots(figsize=(8,8))   # 👈 هنا تحكم في حجم ال
 ax.pie(top5["rating_count"], labels=top5["product_name"], autopct="%.1f%%", startangle=140)
 ax.set_title("Top 5 Products with Highest Rating Counts (Pie Chart)")
 st.pyplot(fig4)
+
 
 
 
