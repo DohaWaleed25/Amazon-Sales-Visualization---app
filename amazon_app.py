@@ -1,197 +1,76 @@
-#import necessary libraries
+# simple_streamlit_app.py
 import streamlit as st
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 import plotly.express as px
 
-# Background 
-page_bg = """
-<style>
-[data-testid="stAppViewContainer"] {
-    background: linear-gradient(to right, #d9a7c7, #fffcdc);
-}
-[data-testid="stHeader"] {
-    background-color: rgba(0,0,0,0);
-}
-[data-testid="stSidebar"] {
-    background: #f0f2f6;
-}
-</style>
-"""
-st.markdown(page_bg, unsafe_allow_html=True)
+st.set_page_config(page_title="Amazon Sales Visuals", layout="wide")
 
-# -----------------------------
-# Load Data
-# -----------------------------
-@st.cache_data
-def load_data():
-    df = pd.read_excel("Amazon_Sales_Cleaned.xlsx")  
-    return df
+st.title("📊 Amazon Sales Visualizations")
 
-df = load_data()
+# ---- Load data ----
+uploaded = st.file_uploader("Upload your cleaned dataset", type=["csv", "xlsx"])
+if uploaded:
+    if uploaded.name.endswith(".csv"):
+        df = pd.read_csv(uploaded)
+    else:
+        df = pd.read_excel(uploaded)
+else:
+    st.warning("Please upload your cleaned dataset to continue.")
+    st.stop()
 
-st.title("📦 Amazon Sales Data")
+# ---- Tabs for different charts ----
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "Price Distribution", 
+    "Rating Distribution", 
+    "Correlation Heatmap", 
+    "Top Products", 
+    "Top Categories"
+])
 
-# -----------------------------
-# Sidebar Navigation
-# -----------------------------
-st.sidebar.title("Navigation")
-page = st.sidebar.radio(
-    "Go to section:",
-    ["ℹ️ About Data", "📂 Categories", "🛍️ Products"],
-    index=0  # default = Categories
-)
+# ---- Tab 1: Price Distribution ----
+with tab1:
+    st.subheader("Discounted Price Distribution")
+    if "discounted_price" in df.columns:
+        fig, ax = plt.subplots(figsize=(8,5))
+        sns.histplot(df["discounted_price"], bins=50, kde=True, ax=ax, color="skyblue")
+        st.pyplot(fig)
 
-# =============================
-# Categories Section
-# =============================
-if page == "📂 Categories":
-    with st.container():
-        st.header("📂 Main Categories")
+# ---- Tab 2: Rating Distribution ----
+with tab2:
+    st.subheader("Rating Distribution")
+    if "rating" in df.columns:
+        fig, ax = plt.subplots(figsize=(8,5))
+        sns.histplot(df["rating"], bins=20, kde=False, ax=ax, color="orange")
+        st.pyplot(fig)
 
-        # 1. Top Categories by Rating
-        total_ratings_by_category = df.groupby('main_category')['rating'].sum().sort_values(ascending=False)
+# ---- Tab 3: Correlation Heatmap ----
+with tab3:
+    st.subheader("Correlation Heatmap")
+    num_cols = df.select_dtypes(include="number").columns
+    if len(num_cols) > 1:
+        corr = df[num_cols].corr()
+        fig, ax = plt.subplots(figsize=(8,6))
+        sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
+        st.pyplot(fig)
 
-        st.subheader("Top Categories by Total Rating")
-        top_n_rating = st.slider("Number of categories to show ", 1, 9, 5, key="rating_slider")
-
-        ratings_df = (
-            total_ratings_by_category
-            .head(top_n_rating)
-            .reset_index()
-        )
-
-        fig1 = px.bar(
-            ratings_df,
-            x="main_category",
-            y="rating",
-            orientation="v",
-            color="rating",
-            color_continuous_scale="blues",
-            title=f"Top {top_n_rating} Categories by Total Ratings"
-        )
-        fig1.update_layout(
-        plot_bgcolor="#0d1b2a",   
-        paper_bgcolor="#0d1b2a",  
-        font=dict(color="white")  
-        )
-        st.plotly_chart(fig1, use_container_width=True)
-
-        # 2. Top Categories by Discount
-        st.subheader("Top Categories by Average Discount %")
-        top_n_discount = st.slider("Number of categories to show ", 1, 9, 5, key="discount_slider")
-
-        avg_discount = (
-            df.groupby('main_category')['discount_percentage']
-            .mean()
-            .sort_values(ascending=False)
-            .head(top_n_discount)
-            .reset_index()
-        )
-
-        fig2 = px.bar(
-            avg_discount,
-            x="discount_percentage",
-            y="main_category",
-            orientation="h",
-            color="discount_percentage",
-            color_continuous_scale="blues",
-            title=f"Top {top_n_discount} Categories by Average Discount %"
-        )
-        fig2.update_layout(
-        plot_bgcolor="#0d1b2a",  
-        paper_bgcolor="#0d1b2a",  
-        font=dict(color="white") 
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-
-
-# =============================
-# Products Section
-# =============================
-elif page == "🛍️ Products":
-    with st.container():
-        st.header("🛍️ Products")
-
-        # Always show top 5 products (no slider)
-        top_products = df[['product_name','rating_count']].sort_values(
-            by="rating_count", ascending=False
-        ).head(6)
-
-        st.subheader("Top 5 Most Reviewed Products")
-
-        fig = px.pie(
-            top_products,
-            values="rating_count",
-            names="product_name",
-            title="Top 5 Most Reviewed Products",
-            hole=0.3
-        )
-        fig.update_layout(
-        plot_bgcolor="#0d1b2a",  
-        paper_bgcolor="#0d1b2a",  
-        font=dict(color="white")  
-        )
+# ---- Tab 4: Top Products ----
+with tab4:
+    st.subheader("Top 10 Products by Rating Count")
+    if "rating_count" in df.columns:
+        df["rating_count"] = pd.to_numeric(df["rating_count"], errors="coerce")
+        top_products = df.nlargest(10, "rating_count")
+        fig = px.bar(top_products, x="product_name", y="rating_count", title="Top 10 Reviewed Products", color="rating_count")
         st.plotly_chart(fig, use_container_width=True)
 
-    
-# =============================
-# About Data Section
-# =============================
-elif page == "ℹ️ About Data":
-    with st.container():
-        st.header("ℹ️ About Data")
-
-        # 1. Price vs Rating
-        st.subheader("Relationship Between Product Price and Rating")
-        fig2 = px.scatter(
-            df, 
-            x="actual_price", 
-            y="rating", 
-            color="rating",
-            color_continuous_scale="viridis",
-            title="Relationship Between Product Price and Rating"
-        )
-        fig2.update_layout(
-        plot_bgcolor="#0d1b2a",  
-        paper_bgcolor="#0d1b2a",  
-        font=dict(color="white")  
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-        st.info("📌 Ratings don’t strongly increase with price. There is no clear correlation between higher price and better rating.")
-
-        # 2. Discounts vs Ratings
-        st.subheader("Do Bigger Discounts Lead to Higher Ratings?")
-        fig3 = px.scatter(
-            df,
-            x="discount_percentage",
-            y="rating",
-            color="discount_percentage",
-            color_continuous_scale="plasma",
-            title="Discount Percentage vs Rating"
-        )
-        fig3.update_layout(
-        plot_bgcolor="#0d1b2a",
-        paper_bgcolor="#0d1b2a",  
-        font=dict(color="white")  
-        )
-        st.plotly_chart(fig3, use_container_width=True)
-        st.info("📌 Discounts don’t affect rating much.")
-
-        # 3. Discounted Price vs Ratings
-        st.subheader("Do Discounted Prices Lead to Higher Ratings?")
-        fig4 = px.scatter(
-            df,
-            x="discounted_price",
-            y="rating",
-            color="discounted_price",
-            color_continuous_scale="magma",
-            title="Discounted Price vs Rating"
-        )
-        fig4.update_layout(
-        plot_bgcolor="#0d1b2a",   
-        paper_bgcolor="#0d1b2a",  
-        font=dict(color="white")  
-        )
-        st.plotly_chart(fig4, use_container_width=True)
-
-        st.info("📌 Discounted price doesn’t affect rating much — and neither do discount percentage or actual price.")
+# ---- Tab 5: Top Categories ----
+with tab5:
+    st.subheader("Top 10 Categories by Revenue (Discounted Price × Rating Count)")
+    if {"discounted_price", "rating_count", "category"}.issubset(df.columns):
+        df["rating_count"] = pd.to_numeric(df["rating_count"], errors="coerce").fillna(0)
+        df["revenue"] = df["discounted_price"] * df["rating_count"]
+        top_cat = df.groupby("category")["revenue"].sum().reset_index().sort_values("revenue", ascending=False).head(10)
+        fig = px.bar(top_cat, x="category", y="revenue", title="Top 10 Categories by Revenue", color="revenue")
+        st.plotly_chart(fig, use_container_width=True)
+```
